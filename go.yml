@@ -1,0 +1,61 @@
+name: Go
+on: [push]
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+    - name: Set up Go 1.13
+      uses: actions/setup-go@v1
+      with:
+        go-version: 1.13
+      id: go
+
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v1
+
+    - name: Get dependencies
+      run: go get -v -t -d ./...
+      
+    - name: Test
+      run: go test ./...
+    
+    - name: Notify
+      run: >-
+        curl -s "https://api.telegram.org/bot$BTOKEN/sendMessage" \
+          --data-urlencode "chat_id=-1001493773956" \
+          --data-urlencode "text=Go Test for \`$GITHUB_REF\`: SUCCESS"$'\n'"https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
+          --data-urlencode "parse_mode=Markdown"
+      env:
+        BTOKEN: ${{ secrets.BTOKEN }}
+      if: success()
+      
+    - name: Notify
+      run: >-
+        curl -s "https://api.telegram.org/bot$BTOKEN/sendMessage" \
+          --data-urlencode "chat_id=-1001493773956" \
+          --data-urlencode "text=Go Test for \`$GITHUB_REF\`: FAILURE"$'\n'"https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
+          --data-urlencode "parse_mode=Markdown"
+      env:
+        BTOKEN: ${{ secrets.BTOKEN }}
+      if: failure()
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Set up Go 1.13
+      uses: actions/setup-go@v1
+      with:
+        go-version: 1.13
+      id: go
+
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v1
+
+    - name: Get dependencies
+      run: go get -v -t -d ./...
+
+    - name: Build
+      run: go build -v .
